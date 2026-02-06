@@ -1,9 +1,9 @@
 {
   "name": "@centricle/rtfm",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Local docs reader. Zero dependencies. Zero network.",
   "bin": {
-    "rtfm": "./bin/rtfm.js"
+    "rtfm": "bin/rtfm.js"
   },
   "files": [
     "bin/",
@@ -23,6 +23,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/centricle/rtfm"
+    "url": "git+https://github.com/centricle/rtfm.git"
   }
 }
