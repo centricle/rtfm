@@ -1,6 +1,6 @@
 {
   "name": "@centricle/rtfm",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Local docs reader. Zero dependencies. Zero network.",
   "bin": {
     "rtfm": "./bin/rtfm.js"
