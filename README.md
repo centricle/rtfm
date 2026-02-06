@@ -73,6 +73,10 @@ This matters for:
 - **Speed** — No network latency for assets
 - **Reliability** — No CDN outages or breaking changes
 
+## Credits
+
+Built on [Docsify](https://docsify.js.org/), the magical documentation site generator. Docsify is bundled locally so rtfm works offline.
+
 ## License
 
 MIT
