@@ -1,0 +1,28 @@
+{
+  "name": "@centricle/rtfm",
+  "version": "1.0.0",
+  "description": "Local docs reader. Zero dependencies. Zero network.",
+  "bin": {
+    "rtfm": "./bin/rtfm.js"
+  },
+  "files": [
+    "bin/",
+    "lib/",
+    "templates/"
+  ],
+  "keywords": [
+    "docs",
+    "markdown",
+    "documentation",
+    "local",
+    "docsify"
+  ],
+  "license": "MIT",
+  "engines": {
+    "node": ">=14"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/centricle/rtfm"
+  }
+}
