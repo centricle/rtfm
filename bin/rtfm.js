@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+const fs = require('fs');
+const path = require('path');
 const { serve } = require('../lib/serve');
 const { init } = require('../lib/init');
 const { sidebar } = require('../lib/sidebar');
@@ -49,6 +51,7 @@ rtfm - Local docs reader. Zero dependencies. Zero network.
 
 Usage:
   rtfm                  Serve current directory, open browser
+  rtfm [file.md]        Serve a single markdown file
   rtfm serve [dir]      Serve specified directory
   rtfm init             Scaffold rtfm files into current directory
   rtfm sidebar          Auto-generate _sidebar.md from *.md files
@@ -80,7 +83,15 @@ switch (cmd) {
   case 'open':
     open(positional[1] || '/', flags);
     break;
-  default:
-    // Assume it's a directory to serve
-    serve(cmd, flags);
+  default: {
+    // Single .md file: serve its directory, open to that file
+    const resolved = path.resolve(cmd);
+    if (cmd.endsWith('.md') && fs.existsSync(resolved) && fs.statSync(resolved).isFile()) {
+      const dir = path.dirname(resolved);
+      const docPath = path.basename(resolved, '.md');
+      serve(dir, flags, docPath);
+    } else {
+      serve(cmd, flags);
+    }
+  }
 }
