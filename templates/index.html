@@ -184,7 +184,21 @@
       loadSidebar: true,
       subMaxLevel: 2,
       auto2top: true,
-      routerMode: 'history'
+      routerMode: 'hash',
+      plugins: [
+        function(hook) {
+          hook.doneEach(function() {
+            var path = window.location.hash.replace(/^#\/?/, '');
+            if (path) {
+              // Use filename from route as tab title
+              var name = path.split('/').pop().replace(/\.md$/i, '');
+              document.title = decodeURIComponent(name);
+            } else {
+              document.title = 'rtfm';
+            }
+          });
+        }
+      ]
     }
   </script>
   <script src="/docsify.min.js"></script>
