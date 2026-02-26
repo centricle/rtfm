@@ -33,11 +33,22 @@ rtfm           # serve on localhost:4000, open browser
 
 That's it. Your markdown files are now a navigable documentation site.
 
+## Single File from Anywhere
+
+You don't need to `cd` into the project directory. Pass any `.md` file path and rtfm serves its parent directory, opening directly to that file:
+
+```bash
+rtfm ~/Projects/mileweave/BOOKING_AFFILIATE.md
+```
+
+This serves `~/Projects/mileweave/` and opens the browser to `BOOKING_AFFILIATE`. All other markdown files in that directory are available in the sidebar. Works with absolute and relative paths.
+
 ## Commands
 
 | Command | Description |
 |---------|-------------|
 | `rtfm` | Serve current directory and open browser |
+| `rtfm [file.md]` | Serve the file's directory, open to that file |
 | `rtfm serve [dir]` | Serve specified directory |
 | `rtfm init` | Scaffold rtfm files into current directory |
 | `rtfm sidebar` | Auto-generate `_sidebar.md` from `*.md` files |
