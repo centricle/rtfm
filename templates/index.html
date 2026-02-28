@@ -4,126 +4,437 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>rtfm</title>
-  <link rel="stylesheet" href="/simple.css">
   <style>
-    :root {
-      /* Kindle paper palette */
-      --paper: #faf8f3;
-      --paper-dark: #f5f2eb;
-      --ink: #2d2a24;
-      --ink-light: #5c584f;
-      --accent: #a85d32;
-      --border: #e5e0d5;
+    /* ===========================================
+       Docsify structural layout
+       (extracted from pure theme, no visual rules)
+       =========================================== */
+
+    * { box-sizing: border-box; }
+    body:not(.ready) { overflow: hidden; }
+    body:not(.ready) .app-nav,
+    body:not(.ready) > nav,
+    body:not(.ready) [data-cloak] { display: none; }
+    body, html { height: 100%; }
+    body { margin: 0; overflow-x: hidden; }
+    img { max-width: 100%; }
+    a[disabled] { cursor: not-allowed; opacity: .6; }
+
+    main { display: block; position: relative; width: 100vw; height: 100%; z-index: 0; }
+    main.hidden { display: none; }
+
+    .sidebar {
+      overflow-y: auto;
+      position: absolute;
+      top: 0; bottom: 0; left: 0;
+      width: 280px;
+      z-index: 20;
+      transition: transform .25s ease-out;
+    }
+    .sidebar .sidebar-nav { padding-bottom: 40px; }
+    .sidebar li.collapse .app-sub-sidebar { display: none; }
+    .sidebar ul { margin: 0 0 0 10px; padding: 0; }
+    .sidebar ul, .sidebar ul li { list-style: none; }
+    .sidebar ul li a { display: block; }
+    .sidebar ul li ul { padding-left: 14px; }
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; }
+    .sidebar:hover::-webkit-scrollbar-thumb { background: hsla(0,0%,53%,.4); }
+    .sidebar:hover::-webkit-scrollbar-track { background: hsla(0,0%,53%,.1); }
+
+    .sidebar-toggle {
+      background: transparent; border: 0; outline: none;
+      padding: 10px; position: absolute; bottom: 0; left: 0;
+      width: 280px; z-index: 30; cursor: pointer;
+    }
+    .sidebar-toggle span { display: block; margin-bottom: 4px; width: 16px; height: 2px; }
+
+    body.sticky .sidebar, body.sticky .sidebar-toggle { position: fixed; }
+
+    .content {
+      position: absolute;
+      top: 0; right: 0; bottom: 0; left: 280px;
+      transition: left .25s ease;
     }
 
-    /* Classic mode (default) - literary reading */
+    .markdown-section {
+      margin: 0 auto;
+      position: relative;
+    }
+    .markdown-section > * { box-sizing: border-box; }
+    .markdown-section > :first-child { margin-top: 0 !important; }
+
+    body.close .sidebar { transform: translateX(-280px); }
+    body.close .sidebar-toggle { width: auto; }
+    body.close .content { left: 0; }
+
+    li input[type=checkbox] { margin: 0 .2em .25em 0; vertical-align: middle; }
+    .markdown-section ul.task-list > li { list-style-type: none; }
+
+    .progress {
+      height: 2px; left: 0; position: fixed; right: 0; top: 0;
+      transition: width .2s, opacity .4s; width: 0; z-index: 999999;
+    }
+
+    .search .search-keyword { font-style: normal; font-weight: 700; }
+
+    @media print {
+      .app-nav, .github-corner, .sidebar, .sidebar-toggle { display: none; }
+    }
+
+    @media screen and (max-width: 768px) {
+      .sidebar, .sidebar-toggle { position: fixed; }
+      main { height: auto; min-height: 100vh; overflow-x: hidden; }
+      .sidebar { left: -220px; }
+      .content { left: 0; max-width: 100vw; position: static; padding-top: 20px; transition: transform .25s ease; }
+      .sidebar-toggle { width: auto; padding: 30px 30px 10px 10px; }
+      body.close .sidebar { transform: translateX(280px); }
+      body.close .sidebar-toggle { width: 280px; padding: 10px; }
+      body.close .content { transform: translateX(280px); }
+    }
+
+    /* ===========================================
+       Visual theme (Claude.ai aesthetic)
+
+       Two knobs control all sizing:
+         --font-size     → content body text
+         --sidebar-size  → sidebar nav text
+       Everything else is em-relative to its context.
+       =========================================== */
+
+    :root {
+      --bg: #f3ece2;
+      --surface: #ffffff;
+      --ink: #1a1714;
+      --ink-secondary: #6b6560;
+      --ink-tertiary: #9b9590;
+      --accent: #c9714a;
+      --border: rgba(0, 0, 0, 0.06);
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --radius: 12px;
+      --sidebar-size: 24px;
+    }
+
+    /* Prose mode (default) — serif, reading */
     body.classic {
       --font-body: Charter, 'Bitstream Charter', 'Sitka Text', Cambria, Georgia, serif;
-      --font-size: 30px;
-      --line-height: 1.8;
-      --content-max: 65ch;
+      --font-size: 28px;
+      --line-height: 1.65;
+      --content-max: 60ch;
     }
 
-    /* Modern mode - reference/scanning */
+    /* Compact mode — sans-serif, scanning */
     body.modern {
       --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      --font-size: 24px;
+      --font-size: 21px;
       --line-height: 1.5;
       --content-max: 80ch;
     }
 
     body {
-      background: var(--paper);
+      background: var(--bg);
       color: var(--ink);
       font-family: var(--font-body);
       font-size: var(--font-size);
       line-height: var(--line-height);
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Sidebar */
+    /* --- Sidebar --- */
     .sidebar {
-      background: var(--paper-dark) !important;
-      border-right: 1px solid var(--border) !important;
+      background: var(--bg);
+      border-right: none;
+      padding-top: 1em;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: var(--sidebar-size);
+      line-height: 1.4;
+    }
+
+    .sidebar-nav {
+      padding: 0 0.35em;
     }
 
     .sidebar-nav a {
-      color: var(--ink-light) !important;
+      color: var(--ink-secondary);
+      text-decoration: none;
+      font-size: 1em;
+      padding: 0.15em 0.4em;
+      border-radius: 8px;
+      transition: all 0.15s;
     }
 
-    .sidebar-nav a:hover,
+    .sidebar-nav a:hover {
+      color: var(--ink);
+      background: rgba(0, 0, 0, 0.04);
+    }
+
     .sidebar-nav a.active {
-      color: var(--accent) !important;
+      color: var(--ink);
+      background: var(--surface);
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .sidebar ul {
+      padding-left: 0;
+    }
+
+    .sidebar li {
+      margin: 0.08em 0;
+    }
+
+    .sidebar li > p {
+      font-size: 0.7em;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-tertiary);
+      margin: 0.5em 0 0.1em;
+      padding: 0.15em 0.6em;
+    }
+
+    .sidebar > h1 {
+      margin: 0 0 0.8em;
+      font-size: 1em;
+      text-align: left;
+      padding: 0 0.4em;
+    }
+
+    .sidebar > h1 a {
+      color: var(--ink);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.35em;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .sidebar > h1 .logo-icon {
+      width: 1em;
+      height: 1em;
+      color: var(--accent);
+      flex-shrink: 0;
     }
 
     .app-name-link {
-      color: var(--ink) !important;
+      color: var(--ink);
+      font-family: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 600;
+      font-size: 1em;
+      letter-spacing: -0.01em;
+      padding: 0 0.4em 0.5em;
     }
 
-    /* Content */
+    /* --- Content area --- */
+    .content {
+      padding-top: 20px;
+    }
+
     .markdown-section {
-      max-width: var(--content-max) !important;
+      max-width: var(--content-max);
+      padding: 1em 1.3em 1.15em;
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      margin-bottom: 1.15em;
     }
 
+    /* --- Typography --- */
     .markdown-section a {
       color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .markdown-section a:hover { text-decoration: underline; }
+
+    /* Heading anchor links inherit heading color, not accent */
+    .markdown-section h1 a,
+    .markdown-section h2 a,
+    .markdown-section h3 a,
+    .markdown-section h4 a {
+      color: inherit;
+      font-weight: inherit;
+    }
+    .markdown-section h1 a:hover,
+    .markdown-section h2 a:hover,
+    .markdown-section h3 a:hover,
+    .markdown-section h4 a:hover {
+      text-decoration: none;
     }
 
-    .markdown-section a:hover {
+    .markdown-section h1 {
       color: var(--ink);
+      font-weight: 700;
+      font-size: 1.6em;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.4em;
+      padding-bottom: 0.35em;
+      border-bottom: 1px solid var(--border);
     }
 
-    .markdown-section h1,
-    .markdown-section h2,
-    .markdown-section h3,
+    .markdown-section h2 {
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 1.3em;
+      letter-spacing: -0.01em;
+      margin: 1.2em 0 0.4em;
+    }
+
+    .markdown-section h3 {
+      color: var(--ink);
+      font-weight: 600;
+      font-size: 1.1em;
+      margin: 0.9em 0 0.3em;
+    }
+
     .markdown-section h4 {
       color: var(--ink);
+      font-weight: 600;
+      font-size: 1em;
+      margin: 0.8em 0 0.2em;
     }
 
+    .markdown-section p {
+      margin: 0.6em 0;
+    }
+
+    .markdown-section ul,
+    .markdown-section ol {
+      margin: 0.5em 0;
+    }
+
+    .markdown-section li {
+      margin: 0.15em 0;
+    }
+
+    /* --- Block elements --- */
     .markdown-section blockquote {
       border-left: 3px solid var(--accent);
-      background: var(--paper-dark);
-      color: var(--ink-light);
+      background: rgba(201, 113, 74, 0.06);
+      color: var(--ink-secondary);
+      padding: 0.3em 0.5em;
+      border-radius: 0 8px 8px 0;
+      margin: 0.6em 0;
     }
 
     .markdown-section code {
-      background: var(--paper-dark);
-      color: var(--ink-light);
+      background: var(--bg);
+      color: var(--ink-secondary);
+      padding: 0.07em 0.2em;
+      border-radius: 6px;
+      font-size: 0.85em;
     }
 
     .markdown-section pre {
-      background: var(--paper-dark) !important;
+      background: var(--ink);
+      color: #e8e2da;
+      border-radius: 10px;
+      padding: 0.5em 0.6em;
+      margin: 0.6em 0;
+      overflow-x: auto;
     }
 
-    .markdown-section table th {
-      background: var(--paper-dark);
+    .markdown-section pre code {
+      background: transparent;
+      color: inherit;
+      padding: 0;
+      font-size: 0.75em;
     }
 
     .markdown-section hr {
-      border-color: var(--border);
+      border: none;
+      height: 1px;
+      background: var(--border);
+      margin: 1em 0;
     }
 
-    /* Segmented toggle */
+    .markdown-section img {
+      border-radius: 10px;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* --- Tables --- */
+    .markdown-section table {
+      border-collapse: separate;
+      border-spacing: 0;
+      display: table;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      width: 100%;
+      margin: 0.6em 0;
+      font-size: 0.85em;
+    }
+
+    .markdown-section th {
+      background: var(--bg);
+      font-weight: 600;
+      font-size: 0.8em;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-secondary);
+      padding: 0.4em 0.6em;
+      text-align: left;
+      border: none;
+    }
+
+    .markdown-section td {
+      padding: 0.4em 0.6em;
+      border: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .markdown-section tr {
+      border: none;
+      background: transparent;
+    }
+
+    .markdown-section th:empty,
+    .markdown-section td:empty {
+      display: none;
+    }
+
+    /* --- Tip/warn (Docsify built-in) --- */
+    .markdown-section p.tip {
+      border-left: 4px solid var(--accent);
+      background: rgba(201, 113, 74, 0.06);
+      border-radius: 0 8px 8px 0;
+      padding: 0.35em 0.6em;
+      margin: 0.8em 0;
+    }
+
+    .markdown-section p.warn {
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 8px;
+      padding: 0.35em 0.6em;
+    }
+
+    /* --- Mode toggle --- */
     .mode-toggle {
       position: fixed;
-      top: 20px;
+      top: 16px;
       right: 20px;
       z-index: 100;
       display: flex;
-      background: var(--paper-dark);
+      background: var(--surface);
       border: 1px solid var(--border);
-      border-radius: 6px;
+      border-radius: 10px;
       overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      font-size: 16px;
+      font-size: 13px;
+      box-shadow: var(--shadow-sm);
     }
 
     .mode-toggle button {
       background: transparent;
       border: none;
-      padding: 10px 18px;
-      color: var(--ink-light);
+      padding: 8px 16px;
+      color: var(--ink-tertiary);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.15s;
+      font-weight: 500;
     }
 
     .mode-toggle button:first-child {
@@ -131,26 +442,60 @@
     }
 
     .mode-toggle button:hover:not(.active) {
-      background: var(--paper);
       color: var(--ink);
     }
 
     .mode-toggle button.active {
       background: var(--ink);
-      color: var(--paper);
+      color: white;
       cursor: default;
     }
 
-    /* Hide sidebar toggle */
-    .sidebar-toggle {
-      display: none !important;
+    /* --- Hide sidebar toggle --- */
+    .sidebar-toggle { display: none; }
+
+    /* --- Search --- */
+    .search input {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.4em 0.6em;
+      font-size: 0.65em;
+      box-shadow: var(--shadow-sm);
+      margin: 0 0.5em 0.5em;
+      width: calc(100% - 1em);
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    .search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(201, 113, 74, 0.12);
+    }
+
+    .search a:hover {
+      color: var(--accent);
+    }
+
+    /* --- Loading state --- */
+    div#app {
+      font-size: 21px;
+      font-weight: lighter;
+      margin: 40vh auto;
+      text-align: center;
+      color: var(--ink-secondary);
+    }
+    div#app:empty:before { content: "Loading..."; }
+
+    .progress {
+      background-color: var(--accent);
     }
   </style>
 </head>
 <body class="classic">
   <div class="mode-toggle">
-    <button onclick="setMode('modern')">Modern</button>
-    <button class="active" onclick="setMode('classic')">Classic</button>
+    <button onclick="setMode('classic')">Prose</button>
+    <button onclick="setMode('modern')">Compact</button>
   </div>
   <div id="app"></div>
   <script>
@@ -162,24 +507,23 @@
       body.classList.remove('classic', 'modern');
       body.classList.add(mode);
 
+      const modeMap = { classic: 'prose', modern: 'compact' };
       buttons.forEach(btn => {
-        btn.classList.toggle('active', btn.textContent.toLowerCase() === mode);
+        btn.classList.toggle('active', btn.textContent.toLowerCase() === modeMap[mode]);
       });
 
       localStorage.setItem('rtfm-mode', mode);
     }
 
-    // Restore saved preference
+    // Restore saved preference (or apply default)
     (function() {
       const saved = localStorage.getItem('rtfm-mode');
-      if (saved) {
-        setMode(saved);
-      }
+      setMode(saved || 'classic');
     })();
 
     // Docsify config
     window.$docsify = {
-      name: 'rtfm',
+      name: '<svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>rtfm',
       repo: false,
       loadSidebar: true,
       subMaxLevel: 2,
